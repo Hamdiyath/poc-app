@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from database import Base, engine
+from models import Category, Product  # Force le chargement des modèles
 from alembic import context
 
 # this is the Alembic Config object, which provides
