@@ -6,3 +6,13 @@ setup_exception_handlers(app)
 
 app.include_router(category.router)
 app.include_router(product.router)
+
+
+
+@app.get("/")
+def root():
+    return {
+        "success": True,
+        "message": "Bienvenue sur l'API POC",
+        "data": None,
+    }
