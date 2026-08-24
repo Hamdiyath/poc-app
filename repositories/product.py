@@ -27,7 +27,8 @@ def get_by_title(db: Session, title: str) -> Optional[Product]:
 
 
 # ---------- Recherche multi-critères ----------
-def search_products(db: Session,
+def search_products(
+    db: Session,
     search: Optional[str] = None,
     category_id: Optional[UUID] = None,
     price_min: Optional[Decimal] = None,
