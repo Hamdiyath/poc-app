@@ -56,7 +56,7 @@ def search_products(
         query = query.filter(
             or_(
                 Product.title.ilike(f"%{search}%"),
-                func.similarity(Product.title, search) > 0.3
+                func.word_similarity(search,Product.title) > 0.3
             )
         )
 
