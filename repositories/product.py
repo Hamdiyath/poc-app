@@ -2,8 +2,10 @@
 from typing import Optional, List, Tuple
 from uuid import UUID
 from decimal import Decimal
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload
 from models.product import Product
+
 
 # ---------- Récupération par ID ----------
 def get_by_id(db: Session, product_id: UUID) -> Optional[Product]:
@@ -28,17 +30,17 @@ def get_by_title(db: Session, title: str) -> Optional[Product]:
 
 # ---------- Recherche multi-critères ----------
 def search_products(
-    db: Session,
-    search: Optional[str] = None,
-    category_id: Optional[UUID] = None,
-    price_min: Optional[Decimal] = None,
-    price_max: Optional[Decimal] = None,
-    in_stock: Optional[bool] = None,
-    is_active: Optional[bool] = None,
-    sort_by: Optional[str] = None,
-    sort_order: str = "asc",
-    skip: int = 0,
-    limit: int = 100,
+        db: Session,
+        search: Optional[str] = None,
+        category_id: Optional[UUID] = None,
+        price_min: Optional[Decimal] = None,
+        price_max: Optional[Decimal] = None,
+        in_stock: Optional[bool] = None,
+        is_active: Optional[bool] = None,
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
+        skip: int = 0,
+        limit: int = 100,
 ) -> Tuple[List[Product], int]:
     """
     Recherche des produits selon une combinaison de filtres.
@@ -49,7 +51,14 @@ def search_products(
 
     # ---------- Filtres appliqués conditionnellement ----------
     if search:
-        query = query.filter(Product.title.ilike(f"%{search}%"))
+        # Combine ILIKE (correspondance exacte/sous-chaîne) et similarity (tolérance aux fautes)
+        # 0.3 est le seuil de similarité recommandé (entre 0.0 et 1.0)
+        query = query.filter(
+            or_(
+                Product.title.ilike(f"%{search}%"),
+                func.similarity(Product.title, search) > 0.3
+            )
+        )
 
     if category_id:
         query = query.filter(Product.category_id == category_id)
@@ -78,9 +87,13 @@ def search_products(
         "created_at": Product.created_at,
         "title": Product.title,
     }
+
     if sort_by in sort_columns:
         column = sort_columns[sort_by]
         query = query.order_by(column.desc() if sort_order == "desc" else column.asc())
+    elif search:
+        # Tri par pertinence si aucun tri spécifique n'est demandé
+        query = query.order_by(func.similarity(Product.title, search).desc())
 
     # ---------- Pagination ----------
     products = query.offset(skip).limit(limit).all()
