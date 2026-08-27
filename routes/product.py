@@ -15,7 +15,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
 @router.get("/", response_model=ApiResponse[PaginatedData[ProductRead]])
 def search_products(params: ProductSearchParams = Depends(),db: Session = Depends(get_db)):
     controller = ProductController(db)
-    result = controller.search_products(**params.model_dump())
+    result = controller.search_products(params)
     return ApiResponse(success=True, message="Produits récupérés avec succès", data=result)
 
 # ---------- Récupérer un produit par ID ----------
