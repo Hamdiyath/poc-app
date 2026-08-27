@@ -31,18 +31,19 @@ class ProductUpdate(BaseModel):
     category_id: Optional[UUID] = None
 
 
-
+# Mettez à jour uniquement cette classe dans votre fichier schemas
 class ProductSearchParams(BaseModel):
-    search: Optional[str] = Field(None, description="Recherche partielle sur le titre")
+    search: Optional[str] = Field(None, description="Recherche textuelle")
     category_id: Optional[UUID] = Field(None, description="Filtrer par catégorie")
     price_min: Optional[Decimal] = Field(None, ge=0, description="Prix minimum")
     price_max: Optional[Decimal] = Field(None, ge=0, description="Prix maximum")
-    in_stock: Optional[bool] = Field(None, description="Uniquement les produits en stock")
-    is_active: Optional[bool] = Field(None, description="Filtrer par statut actif/inactif")
-    sort_by: Optional[str] = Field(None, description="Champ de tri : price, stock, created_at, title")
+    in_stock: Optional[bool] = Field(None, description="En stock ou rupture")
+    is_active: Optional[bool] = Field(True, description="Par défaut, uniquement les produits en ligne")
+    sort_by: Optional[str] = Field(None, description="Tri : price, stock, title, created_at")
     sort_order: str = Field("asc", description="asc ou desc")
     skip: int = Field(0, ge=0)
-    limit: int = Field(100, ge=1, le=100)
+    limit: int = Field(20, ge=1, le=100) # Réduit à 20 par défaut (idéal e-commerce)
+
 
 class ProductRead(ProductBase):
     """Données retournées au client (inclut ID)."""
