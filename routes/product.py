@@ -1,8 +1,7 @@
 # routes/products.py - Routes pour les produits
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-from typing import Optional
-from decimal import Decimal
+
 
 from database import get_db
 from schemas.product import ProductCreate, ProductUpdate, ProductRead ,ProductSearchParams
