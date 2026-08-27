@@ -51,4 +51,4 @@ def delete_existing_product(product_id: str, db: Session = Depends(get_db)):
     """Supprimer un produit."""
     controller = ProductController(db)
     controller.delete_product(product_id)
-    return ApiResponse(success=True, message="Produit supprimé avec succès", data=None)
+    return ApiResponse(success=True, message="Produit sufrom typing import Optionalpprimé avec succès", data=None)

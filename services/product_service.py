@@ -1,96 +1,69 @@
-# service/product_service.py - Logique métier pour Product
-from typing import Optional
-from uuid import UUID
-from decimal import Decimal
-from fastapi import BackgroundTasks, HTTPException
-from sqlalchemy.orm import Session
+# services/product_service.py - Logique métier pour Product
 
-# Importation de vos composants existants
+from uuid import UUID
+from sqlalchemy.orm import Session
 from repositories import product as product_crud
 from repositories import category as category_crud
 from exceptions.base import ProductNotFoundError, CategoryNotFoundError, InvalidPriceRangeError
 from schemas.response import PaginatedData
-from schemas.product import ProductSearchParams
 
 
 class ProductService:
     def __init__(self, db: Session):
         self.db = db
 
-    # ---------- Recherche multi-critères (Meilisearch Asynchrone) ----------
-    async def search_products(self, params: ProductSearchParams) -> PaginatedData:
-        """
-        Effectue une recherche et un filtrage dynamique ultra-rapide via Meilisearch.
-        Gère les validations métiers avant de lancer la requête.
-        """
-        # Validation métier : plage de prix cohérente
-        if params.price_min is not None and params.price_max is not None and params.price_min > params.price_max:
+    # ---------- Recherche multi-critères ----------
+    def search_products(self, **filters):
+        price_min = filters.get("price_min")
+        price_max = filters.get("price_max")
+        category_id = filters.get("category_id")
+
+        if price_min is not None and price_max is not None and price_min > price_max:
             raise InvalidPriceRangeError()
 
-        # Validation métier : vérification de l'existence de la catégorie dans PostgreSQL (Neon)
-        if params.category_id is not None:
-            if not category_crud.get_by_id(self.db, params.category_id):
-                raise CategoryNotFoundError(params.category_id)
+        if category_id is not None:
+            if not category_crud.get_by_id(self.db, category_id):
+                raise CategoryNotFoundError(category_id)
 
-        # Appel asynchrone au repository mis à jour (Meilisearch)
-        products, total = await product_crud.search_products(params)
+        products, total = product_crud.search_products(self.db, **filters)
 
-        # Retourne les résultats enveloppés proprement dans votre structure PaginatedData
-        return PaginatedData(
-            items=products,
-            total=total,
-            skip=params.skip,
-            limit=params.limit
-        )
+        # .get() sécurisé avec valeurs par défaut au cas où 'skip' ou 'limit' sont absents
+        skip = filters.get("skip", 0)
+        limit = filters.get("limit", 100)
 
-    # ---------- Récupération d'un produit (PostgreSQL - String vers UUID) ----------
-    def get_product_by_id(self, product_id: str):
-        try:
-            uuid_obj = UUID(product_id)
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Format d'UUID invalide")
+        return PaginatedData(items=products, total=total, skip=skip, limit=limit)
 
-        product = product_crud.get_by_id(self.db, uuid_obj)
+    # ---------- Récupération d'un produit ----------
+    def get_product_by_id(self, product_id: UUID):
+        product = product_crud.get_by_id(self.db, product_id)
         if not product:
-            raise ProductNotFoundError(uuid_obj)
+            raise ProductNotFoundError(product_id)
         return product
 
-    # ---------- Création (PostgreSQL + Tâche de fond Meilisearch) ----------
-    def create_product(self, product_data: dict, background_tasks: BackgroundTasks):
+    # ---------- Création ----------
+    def create_product(self, product_data: dict):
         category_id = product_data.get("category_id")
         if category_id is not None:
             if not category_crud.get_by_id(self.db, category_id):
                 raise CategoryNotFoundError(category_id)
+        return product_crud.create(self.db, product_data)
 
-        return product_crud.create(self.db, product_data, background_tasks)
-
-    # ---------- Mise à jour (PostgreSQL + Tâche de fond Meilisearch) ----------
-    def update_product(self, product_id: str, product_data: dict, background_tasks: BackgroundTasks):
-        try:
-            uuid_obj = UUID(product_id)
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Format d'UUID invalide")
-
-        existing = product_crud.get_by_id(self.db, uuid_obj)
+    # ---------- Mise à jour ----------
+    def update_product(self, product_id: UUID, product_data: dict):
+        existing = product_crud.get_by_id(self.db, product_id)
         if not existing:
-            raise ProductNotFoundError(uuid_obj)
+            raise ProductNotFoundError(product_id)
 
         category_id = product_data.get("category_id")
         if category_id is not None:
             if not category_crud.get_by_id(self.db, category_id):
                 raise CategoryNotFoundError(category_id)
 
-        return product_crud.update(self.db, uuid_obj, product_data, background_tasks)
+        return product_crud.update(self.db, product_id, product_data)
 
-    # ---------- Suppression (PostgreSQL + Tâche de fond Meilisearch) ----------
-    def delete_product(self, product_id: str, background_tasks: BackgroundTasks) -> bool:
-        try:
-            uuid_obj = UUID(product_id)
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Format d'UUID invalide")
-
-        existing = product_crud.get_by_id(self.db, uuid_obj)
+    # ---------- Suppression ----------
+    def delete_product(self, product_id: UUID) -> bool:
+        existing = product_crud.get_by_id(self.db, product_id)
         if not existing:
-            raise ProductNotFoundError(uuid_obj)
-
-        return product_crud.delete(self.db, uuid_obj, background_tasks)
+            raise ProductNotFoundError(product_id)
+        return product_crud.delete(self.db, product_id)
