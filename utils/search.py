@@ -1,15 +1,14 @@
 import os
-from dotenv import load_dotenv # Import ajouté
 from meilisearch_python_async import Client
 from models.product import Product
 
-# On charge le .env pour être sûr que l'API lit vos identifiants Cloud
-load_dotenv()
-
 search_client = Client(
-    url=os.getenv("MEILISEARCH_URL"),
-    api_key=os.getenv("MEILISEARCH_MASTER_KEY")
+    url="https://ms-aa0da662e565-53588.par.meilisearch.io",
+    api_key="0fee97302d940747eb5ba148dcc276c4b65cf12477bb9ae703591f1204cf76e9"
 )
+
+
+# ... Conservez le reste du fichier (sync_product_to_search, etc.) identique ...
 
 
 async def sync_product_to_search(product: Product):
