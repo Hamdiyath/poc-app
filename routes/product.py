@@ -28,15 +28,18 @@ def get_product_by_id_route(product_id: str, db: Session = Depends(get_db)):
 
 
 # ---------- Créer un produit ----------
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ApiResponse[ProductRead])
-def create_new_product(
-    product_data: ProductCreate,
-    db: Session = Depends(get_db),
-    background_tasks: BackgroundTasks = BackgroundTasks() # Ajouté pour la synchro
-):
+@router.get("/", response_model=ApiResponse[PaginatedData[dict]])
+async def search_products(params: ProductSearchParams = Depends(), db: Session = Depends(get_db)):
     controller = ProductController(db)
-    result = controller.create_product(product_data.model_dump(), background_tasks)
-    return ApiResponse(success=True, message="Produit créé avec succès", data=result)
+    hits, total = await controller.search_products(params)
+
+    paginated_data = PaginatedData(
+        items=hits,
+        total=total,
+        skip=params.skip,
+        limit=params.limit
+    )
+    return ApiResponse(success=True, message="Produits récupérés avec succès", data=paginated_data)
 
 
 # ---------- Modifier un produit ----------
