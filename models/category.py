@@ -23,3 +23,4 @@ class Category(Base):
 
     # ---------- Relations ----------
     products = relationship("Product", back_populates="category")
+    #back populates c'est quoi

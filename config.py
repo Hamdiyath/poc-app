@@ -30,3 +30,4 @@ class Settings(BaseSettings):
 
 # ---------- Instance globale ----------
 settings = Settings()
+print(f"DEBUG mode actif : {settings.debug}")

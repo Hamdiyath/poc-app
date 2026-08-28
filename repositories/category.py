@@ -8,6 +8,7 @@ from models.category import Category
 
 
 # ---------- Récupération par ID ----------
+#traduction exacte de cette route et de chaque route
 def get_by_id(db: Session, category_id: UUID) -> Optional[Category]:
     """
     Récupère une catégorie par son ID (UUID).
@@ -88,3 +89,5 @@ def delete(db: Session, category_id: UUID) -> bool:
     db.delete(category)
     db.commit()
     return True
+
+

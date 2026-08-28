@@ -31,3 +31,4 @@ class Product(Base):
 
     # ---------- Relations ----------
     category = relationship("Category", back_populates="products")
+    #c'est quoi backpopulates
