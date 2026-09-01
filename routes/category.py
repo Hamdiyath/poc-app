@@ -1,12 +1,14 @@
 # routes/categories.py - Routes pour les catégories
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-from typing import List
+
+from schemas.category import CategorySearchParams
 
 from database import get_db
 from schemas.category import CategoryCreate, CategoryUpdate, CategoryRead
 from controllers.category import CategoryController
-from schemas.response import ApiResponse, PaginatedData
+from schemas.pagination import PaginatedData
+from schemas.response import ApiResponse
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
@@ -22,10 +24,10 @@ def create_new_category(category_data: CategoryCreate, db: Session = Depends(get
 
 # ---------- Lister toutes les catégories ----------
 @router.get("/", response_model=ApiResponse[PaginatedData[CategoryRead]])
-def get_all_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_all_categories(params: CategorySearchParams = Depends(), db: Session = Depends(get_db)):
     """Récupérer toutes les catégories (paginé)."""
     controller = CategoryController(db)
-    result = controller.get_all_categories(skip, limit)
+    result = controller.get_all_categories(params)
     return ApiResponse(success=True, message="Catégories récupérées avec succès", data=result)
 
 

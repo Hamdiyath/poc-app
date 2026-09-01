@@ -33,3 +33,10 @@ class CategoryRead(CategoryBase):
 
     class Config:
         from_attributes = True  # Permet de convertir un objet SQLAlchemy en JSON
+
+
+# ---------- Schéma pour les paramètres de pagination / recherche ----------
+class CategorySearchParams(BaseModel):
+    """Paramètres d'entrée pour la liste paginée des catégories."""
+    page: int = Field(1, ge=1, description="Numéro de la page (minimum 1)")
+    limit: int = Field(10, ge=1, le=100, description="Nombre d'éléments par page (1 à 100)")

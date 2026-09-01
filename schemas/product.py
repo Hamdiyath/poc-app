@@ -40,9 +40,9 @@ class ProductSearchParams(BaseModel):
     in_stock: Optional[bool] = Field(None, description="En stock ou rupture")
     is_active: Optional[bool] = Field(True, description="Par défaut, uniquement les produits en ligne")
     sort_by: Optional[str] = Field(None, description="Tri : price, stock, title, created_at")
-    sort_order: str = Field("asc", description="asc ou desc")
-    skip: int = Field(0, ge=0)
-    limit: int = Field(20, ge=1, le=100) # Réduit à 20 par défaut (idéal e-commerce)
+    sort_order: Optional[str] = Field("asc", description="asc ou desc")
+    page: int = Field(1, ge=1, description="Numéro de la page")
+    limit: int = Field(5, ge=1, le=100, description="Nombre d'éléments par page")
 
 
 class ProductRead(ProductBase):

@@ -1,37 +1,40 @@
 # services/product_service.py - Logique métier pour Product
-
+from math import ceil
 from uuid import UUID
 from sqlalchemy.orm import Session
 from repositories import product as product_crud
 from repositories import category as category_crud
 from exceptions.base import ProductNotFoundError, CategoryNotFoundError, InvalidPriceRangeError
-from schemas.response import PaginatedData
+from schemas.pagination import PaginatedData , create_paginated_response
+from schemas.product import ProductSearchParams
 
 
 class ProductService:
     def __init__(self, db: Session):
         self.db = db
 
-    # ---------- Recherche multi-critères ----------
-    def search_products(self, **filters):
-        price_min = filters.get("price_min")
-        price_max = filters.get("price_max")
-        category_id = filters.get("category_id")
-
-        if price_min is not None and price_max is not None and price_min > price_max:
+    # ---------- Recherche multi-critères avec pagination ----------
+    def search_products(self, params: ProductSearchParams):
+        # 1. Validation métier
+        if params.price_min is not None and params.price_max is not None and params.price_min > params.price_max:
             raise InvalidPriceRangeError()
 
-        if category_id is not None:
-            if not category_crud.get_by_id(self.db, category_id):
-                raise CategoryNotFoundError(category_id)
+        if params.category_id is not None:
+            if not category_crud.get_by_id(self.db, params.category_id):
+                raise CategoryNotFoundError(params.category_id)
 
-        products, total = product_crud.search_products(self.db, **filters)
+        # 2. Calcul du pas (skip)
+        skip = (params.page - 1) * params.limit
 
-        # .get() sécurisé avec valeurs par défaut au cas où 'skip' ou 'limit' sont absents
-        skip = filters.get("skip", 0)
-        limit = filters.get("limit", 100)
+        # 3. Conversion de params en dictionnaire pour les filtres du CRUD/Repository
+        filters = params.model_dump(exclude={"page", "limit"}, exclude_none=True)
 
-        return PaginatedData(items=products, total=total, skip=skip, limit=limit)
+        # ---------- Pagination ----------
+        skip = (params.page - 1) * params.limit
+        items, total = product_crud.search_products(self.db, skip=skip, limit=params.limit, **filters)
+
+        # 4. Construction de la réponse sans aucun calcul manuel dans le service
+        return create_paginated_response(items=items,total=total,page=params.page,limit=params.limit)
 
     # ---------- Récupération d'un produit ----------
     def get_product_by_id(self, product_id: UUID):

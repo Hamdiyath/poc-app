@@ -6,12 +6,6 @@ from pydantic import BaseModel
 T = TypeVar("T")
 
 
-class PaginatedData(BaseModel, Generic[T]):
-    """Enveloppe générique pour toute liste paginée."""
-    items: List[T]
-    total: int
-    skip: int
-    limit: int
 
 
 class ApiResponse(BaseModel, Generic[T]):

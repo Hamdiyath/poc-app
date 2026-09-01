@@ -7,6 +7,12 @@ from sqlalchemy.orm import Session
 from models.category import Category
 
 
+#-------------pagination----------------
+def get_paginated_categories(db:Session, skip: int = 0, limit: int = 10):
+    total = db.query(Category).count()
+    items = db.query(Category).offset(skip).limit(limit).all()
+    return items, total
+
 # ---------- Récupération par ID ----------
 #traduction exacte de cette route et de chaque route
 def get_by_id(db: Session, category_id: UUID) -> Optional[Category]:

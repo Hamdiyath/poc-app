@@ -1,6 +1,6 @@
 # controllers/product.py - Contrôleur des produits
 from services.product_service import ProductService
-
+from schemas.product import ProductSearchParams
 
 class ProductController:
     """
@@ -25,5 +25,6 @@ class ProductController:
         return self.service.delete_product(product_id)
 
     # controller
-    def search_products(self, params):
-        return self.service.search_products(**params.model_dump())
+    def search_products(self, params: ProductSearchParams):
+        # Transmets l'objet params directement au service (identique à CategoryController)
+        return self.service.search_products(params)

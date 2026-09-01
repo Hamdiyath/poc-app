@@ -6,6 +6,10 @@ from sqlalchemy.orm import Session, joinedload
 from models.product import Product
 
 
+
+
+
+
 # ---------- Récupération par ID ----------
 def get_by_id(db: Session, product_id: UUID) -> Optional[Product]:
     """Récupère un produit par son ID avec sa catégorie."""

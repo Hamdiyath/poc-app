@@ -3,8 +3,8 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from repositories import category as category_crud
 from exceptions.base import CategoryNotFoundError, CategoryAlreadyExistsError
-from schemas.response import PaginatedData
-from schemas.category import CategoryRead
+from schemas.pagination import PaginatedData , create_paginated_response
+from schemas.category import CategoryRead , CategorySearchParams
 
 
 class CategoryService:
@@ -19,10 +19,15 @@ class CategoryService:
         return category
 
     # ---------- Liste paginée ----------
-    def get_all_categories(self, skip: int = 0, limit: int = 100) -> PaginatedData:
-        categories = category_crud.get_all(self.db, skip=skip, limit=limit)
-        total = category_crud.count_all(self.db)
-        return PaginatedData(items=categories, total=total, skip=skip, limit=limit)
+    def get_all_categories(self, params: CategorySearchParams) -> PaginatedData:
+        # Récupération de l'offset à partir des attributs de l'objet params
+        skip = (params.page - 1) * params.limit
+
+        # Appel de la base de données
+        categories, total = category_crud.get_paginated_categories(self.db,skip=skip,limit=params.limit)
+        # helper centralisé
+        return create_paginated_response(items=categories,total=total,page=params.page,limit=params.limit)
+
 
     # ---------- Création ----------
     def create_category(self, category_data: dict) -> CategoryRead:

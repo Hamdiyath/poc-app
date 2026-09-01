@@ -1,5 +1,6 @@
 # controllers/category_service.py - Contrôleur des catégories
 from services.category_service import CategoryService
+from schemas.category import CategorySearchParams
 
 
 class CategoryController:
@@ -24,5 +25,6 @@ class CategoryController:
     def delete_category(self, category_id):
         return self.service.delete_category(category_id)
 
-    def get_all_categories(self, skip=0, limit=100):
-        return self.service.get_all_categories(skip, limit)
+    # ---------- Liste paginée ----------
+    def get_all_categories(self, params: CategorySearchParams):
+        return self.service.get_all_categories(params)

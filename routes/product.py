@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from database import get_db
 from schemas.product import ProductCreate, ProductUpdate, ProductRead ,ProductSearchParams
 from controllers.product import ProductController
-from schemas.response import ApiResponse, PaginatedData
+from schemas.pagination import  PaginatedData
+from schemas.response import ApiResponse
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
